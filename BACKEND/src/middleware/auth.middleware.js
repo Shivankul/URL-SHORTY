@@ -1,7 +1,7 @@
 // ye check kragea ki user authenticated hai ki nahi/
 
-import { findUserById } from "../dao/user.dao";
-import { verifyToken } from "../utils/helper";
+import { findUserById } from "../dao/user.dao.js";
+import { verifyToken } from "../utils/helper.js";
 
 export const authMiddleware = async(req, res, next) => {
     const token = req.cookies.accesstoken; // Assuming the token is stored in a cookie named 'accesstoken'

@@ -1,16 +1,30 @@
 import { getShortUrl } from "../dao/short_url.js";
-import { createShortUrlWithoutUser } from "../services/short_url.service.js";
+import { createShortUrlWithoutUser, createShortUrlWithUser } from "../services/short_url.service.js";
 import wrapAsync from "../utils/tryCatchWrapper.js";
 
 
 
 export const createShortUrl = wrapAsync(async (req, res) => {
    
-    const {url} = req.body; // this will extract the URL from the request body
-    const shortUrl = await createShortUrlWithoutUser(url); // generate a short URL using nanoid
+    const data = req.body; // this will extract the URL from the request body
+    console.log(data,"data");
+    // console.log(req.user,"req.user");
+
+
+    let shortUrl;
+    console.log("User ID:", req.user ? req.user._id : "No user logged in");
+    
+    if(req.user){
+        shortUrl = await createShortUrlWithUser(data.url, req.user._id,data.slug); // generate
+     }
+     else {
+        shortUrl = await createShortUrlWithoutUser(data.url); // generate a short URL using nanoid without user ID
+    }
     // we dont just send the send we use json method to send the response beacause we are sending a json object
     res.status(200).json({shortUrl : process.env.APP_URL +'/' + shortUrl}); // send the generated short URL back to the client  
 });
+
+
 
 export const redirectFromShortUrl =wrapAsync(async (req, res) => {
     const {id} = req.params; // this will extract the short URL from the request parameters
@@ -27,6 +41,6 @@ export const createCustomShortUrl = wrapAsync(async (req, res) => {
     if (!slug) {
         return res.status(400).json({ message: "Custom slug is required" }); // send a 400 error if slug is not provided
     }
-    const shortUrl = await createShortUrlWithUser(url, req.user.id, slug); // generate a short URL using nanoid with user ID and custom slug
+    const shortUrl = await createShortUrlWithoutUser(url,customUrl); // generate a short URL using nanoid with user ID and custom slug
     res.status(200).json({ shortUrl: process.env.APP_URL + '/' + shortUrl }); // send the generated short URL back to the client  
 });

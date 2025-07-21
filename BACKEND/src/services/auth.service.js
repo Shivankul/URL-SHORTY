@@ -1,7 +1,7 @@
 
-import { createUser, findUserByEmail } from "../dao/user.dao.js";
+import { createUser, findUserByEmail, findUserByEmailByPassword } from "../dao/user.dao.js";
 import { ConflictError } from "../utils/errorhandler.js";
-import { signToken, verifyToken } from "../utils/helper.js";
+import { signToken } from "../utils/helper.js";
 
 
 export const registerUser =async (name,email,password) => {
@@ -11,17 +11,16 @@ export const registerUser =async (name,email,password) => {
     }
     const newUser = await createUser(name, email, password);
 
-    const token = signToken({ id: newUser._id});
-    return token; // Return the newly created user
+    const token = await signToken({ id: newUser._id});
+    return {token,user}; // Return the newly created user
 }
 
 export const loginUser = async (email, password) => {
-    const user = await findUserByEmail(email);
-    
-    if (!user || user.password !== password) {
-        throw new ConflictError("Invalid Credentials");
-    }
+    const user = await findUserByEmailByPassword(email)
+    if(!user) throw new Error("Invalid email or password")
 
-    const token = verifyToken({ id: user._id });
-    return token; // Return the token for the logged-in user
+    const isPasswordValid = await user.comparePassword(password)
+    if(!isPasswordValid) throw new Error("Invalid email or password")
+    const token = signToken({id: user._id})
+    return {token,user}
 }
